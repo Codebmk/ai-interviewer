@@ -1,6 +1,6 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Loader2, Sparkles, AlertCircle, Briefcase, ChevronRight, X, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Search, Loader2, Sparkles, AlertCircle, Briefcase, ChevronRight, X, ChevronLeft, CheckCircle2, ArrowUp } from 'lucide-react';
 import { generateInterviewQuestions, InterviewQuestion } from './services/aiService';
 
 const LOADING_MESSAGES = [
@@ -34,7 +34,11 @@ export default function App() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!jobTitle.trim()) return;
+    
+    if (!jobTitle.trim()) {
+      setError('Please enter a job title to begin your preparation.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -79,32 +83,42 @@ export default function App() {
 
       <main>
         {/* Search Section */}
-        <section className="material-paper p-6 sm:p-8" id="search-section">
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+        <section id="search-section" className="max-w-2xl mx-auto">
+          <form onSubmit={handleSubmit} className="relative group">
+            <div className="relative flex items-center">
+              <Briefcase className="absolute left-6 text-slate-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="e.g. Customer Success Manager"
-                className="material-input pl-12"
+                placeholder="Job title (e.g. Customer Success Manager)"
+                className="w-full pl-14 pr-16 py-5 rounded-full bg-white border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-lg shadow-sm group-hover:shadow-md"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 disabled={loading}
                 id="job-title-input"
                 aria-label="Job title"
               />
+              <AnimatePresence>
+                {jobTitle.length >= 3 && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8, x: 10 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, x: 10 }}
+                    type="submit"
+                    disabled={loading}
+                    className="absolute right-3 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-lg disabled:bg-slate-300"
+                    id="generate-button"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <ArrowUp className="w-6 h-6" />
+                    )}
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
-            <button
-              type="submit"
-              className="material-button sm:w-auto w-full"
-              disabled={loading || !jobTitle.trim()}
-              id="generate-button"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-              Start Interview Prep
-            </button>
           </form>
-          <p className="mt-4 text-sm text-slate-400">
+          <p className="mt-6 text-sm text-slate-400 text-center">
             Common roles: <button onClick={() => setJobTitle('Customer Success Manager')} className="text-blue-500 hover:underline">Customer Success Manager</button>, 
             <button onClick={() => setJobTitle('Product Manager')} className="text-blue-500 hover:underline mx-1">Product Manager</button>
           </p>
@@ -120,17 +134,8 @@ export default function App() {
               className="fixed inset-0 z-50 bg-white flex flex-col"
               id="fullscreen-modal"
             >
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-600 text-white p-2 rounded-lg">
-                    <Briefcase className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-900 leading-none">{jobTitle} Interview</h2>
-                    <p className="text-xs text-slate-400 mt-1">AI Session Activity</p>
-                  </div>
-                </div>
+              {/* Modal Header - Only Close Button on Right */}
+              <div className="px-6 py-4 flex justify-end bg-white">
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
