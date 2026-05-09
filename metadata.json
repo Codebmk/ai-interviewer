@@ -1,0 +1,10 @@
+{
+  "name": "Interviewer AI",
+  "description": "Generate thoughtful, role-specific interview questions powered by Gemini AI. Input a job title and get instant, professional interview preparation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "AI-powered question generation",
+    "Material Design UI",
+    "Job-specific interview prep"
+  ]
+}
