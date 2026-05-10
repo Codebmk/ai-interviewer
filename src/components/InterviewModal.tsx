@@ -110,7 +110,7 @@ export const InterviewModal = ({
                 ) : questions.length > 0 ? (
                   <div className="space-y-8">
                     {/* Progress Stepper */}
-                    <div className="flex justify-between items-center mb-12">
+                    <div className="flex justify-between items-center mb-12 w-full">
                       {questions.map((_, i) => (
                         <div key={i} className="flex flex-1 items-center">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 ${

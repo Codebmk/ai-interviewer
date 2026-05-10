@@ -19,12 +19,12 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
     >
       <div className="material-paper p-8 sm:p-12 shadow-2xl bg-white ring-1 ring-slate-100">
         <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em] mb-4 block">Question {index + 1} of 3</span>
-        <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
+        <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
           {question.question}
         </h3>
         
         <div className="space-y-6">
-          <div>
+          <div className="relative">
             <label htmlFor={`answer-input-${index}`} className="block text-sm font-semibold text-slate-700 mb-2">Prepare your response:</label>
             <textarea
               id={`answer-input-${index}`}

@@ -1,0 +1,406 @@
+{"tech": 
+[
+  "Software Engineer",
+  "Senior Software Engineer",
+  "Staff Engineer",
+  "Principal Engineer",
+  "Frontend Engineer",
+  "Backend Engineer",
+  "Full Stack Engineer",
+  "Mobile Engineer (iOS)",
+  "Mobile Engineer (Android)",
+  "Embedded Systems Engineer",
+  "API Engineer",
+  "Firmware Engineer",
+  "Engineering Manager",
+  "VP of Engineering",
+  "Chief Technology Officer (CTO)",
+  "Chief Information Officer (CIO)",
+  "Chief Data Officer (CDO)",
+  "Chief AI Officer (CAIO)",
+  "Director of Engineering",
+  "Technical Program Manager",
+  "Data Scientist",
+  "Data Engineer",
+  "Data Analyst",
+  "Machine Learning Engineer",
+  "AI/ML Research Scientist",
+  "NLP Engineer",
+  "Computer Vision Engineer",
+  "Business Intelligence Analyst",
+  "Quantitative Analyst",
+  "AI Product Engineer",
+  "Product Manager",
+  "Senior Product Manager",
+  "Director of Product",
+  "VP of Product",
+  "Chief Product Officer (CPO)",
+  "Product Owner",
+  "Growth Product Manager",
+  "UX Designer",
+  "UI Designer",
+  "Product Designer",
+  "UX Researcher",
+  "Visual Designer",
+  "Design Systems Engineer",
+  "Creative Director",
+  "DevOps Engineer",
+  "Site Reliability Engineer (SRE)",
+  "Cloud Engineer",
+  "Platform Engineer",
+  "Infrastructure Engineer",
+  "Database Administrator (DBA)",
+  "Network Engineer",
+  "Systems Administrator",
+  "Kubernetes/Container Engineer",
+  "Cybersecurity Engineer",
+  "Security Analyst",
+  "Penetration Tester",
+  "Security Architect",
+  "Identity & Access Management Engineer",
+  "SOC Analyst",
+  "Application Security Engineer",
+  "QA Engineer",
+  "SDET (Software Developer in Test)",
+  "Automation Test Engineer",
+  "Performance Engineer",
+  "QA Lead / Manager",
+  "Solutions Architect",
+  "Enterprise Architect",
+  "Technical Sales Engineer",
+  "Scrum Master",
+  "IT Project Manager",
+  "Business Analyst (Tech)",
+  "Technology Consultant",
+  "IT Support Specialist",
+  "Technical Recruiter",
+  "Developer Advocate",
+  "Technical Writer",
+  "Blockchain Developer",
+  "Game Developer",
+  "AR/VR Engineer",
+  "Robotics Engineer",
+  "Hardware Engineer",
+  "Research Scientist (CS)",
+  "Analytics Engineer",
+  "MLOps Engineer",
+  "Feature Engineer",
+  "Head of Data",
+  "Platform Product Manager",
+  "IT Manager",
+  "Information Architect",
+  "Interaction Designer",
+  "Content Designer",
+  "Release Engineer",
+  "Build & Release Engineer",
+  "Threat Intelligence Analyst",
+  "GRC Analyst",
+  "Compliance Engineer",
+  "Load & Stress Test Engineer",
+  "Scrum Coach / Agile Coach",
+  "CRM Administrator",
+  "ERP Consultant",
+  "IT Procurement Specialist",
+  "iOS Developer",
+  "Android Developer",
+  "React Native Developer",
+  "Flutter Developer",
+  "Unity Developer",
+  "Unreal Engine Developer",
+  "WebGL Developer",
+  "WebAssembly Engineer",
+  "GraphQL Engineer",
+  "REST API Developer",
+  "Microservices Architect",
+  "Distributed Systems Engineer",
+  "Compiler Engineer",
+  "Programming Language Designer",
+  "Operating Systems Engineer",
+  "Kernel Developer",
+  "Low-Level Systems Programmer",
+  "Digital Signal Processing Engineer",
+  "Satellite Software Engineer",
+  "Aerospace Software Engineer",
+  "Autonomous Vehicles Engineer",
+  "Computer Graphics Engineer",
+  "Simulation Engineer",
+  "Numerical Methods Engineer",
+  "Scientific Computing Engineer",
+  "Bioinformatics Engineer",
+  "Computational Linguist",
+  "Speech Recognition Engineer",
+  "Text-to-Speech Engineer",
+  "Conversational AI Engineer",
+  "Recommendation Systems Engineer",
+  "Search Engineer",
+  "Ranking & Relevance Engineer",
+  "Reinforcement Learning Engineer",
+  "Generative AI Engineer",
+  "Prompt Engineer",
+  "AI Safety Researcher",
+  "AI Ethics Researcher",
+  "Data Labelling Specialist",
+  "Data Quality Engineer",
+  "Data Governance Analyst",
+  "Data Warehouse Engineer",
+  "ETL Developer",
+  "Streaming Data Engineer",
+  "Real-Time Analytics Engineer",
+  "Data Visualization Engineer",
+  "Financial Data Analyst",
+  "Risk Analyst (Tech)",
+  "Fraud Detection Engineer",
+  "Actuarial Data Scientist",
+  "Growth Analyst",
+  "Product Analyst",
+  "Web Analyst",
+  "Marketing Data Analyst",
+  "Customer Insights Analyst",
+  "Technical Account Manager",
+  "Customer Success Engineer",
+  "Implementation Engineer",
+  "Integration Engineer",
+  "Salesforce Developer",
+  "SAP Developer",
+  "Workday Consultant",
+  "Low-Code/No-Code Developer",
+  "RPA Developer (Robotic Process Automation)",
+  "Chatbot Developer",
+  "Voice Interface Designer",
+  "Accessibility Engineer",
+  "Localisation Engineer",
+  "Internationalisation Engineer",
+  "SEO Engineer",
+  "Web Performance Engineer",
+  "Browser Engineer",
+  "Email Deliverability Engineer",
+  "Payments Engineer",
+  "Fintech Engineer",
+  "Crypto/Web3 Developer",
+  "Smart Contract Developer",
+  "DeFi Protocol Engineer",
+  "NFT Platform Engineer",
+  "IoT Engineer",
+  "Edge Computing Engineer",
+  "5G Network Engineer",
+  "Telecommunications Engineer",
+  "Quantum Computing Researcher",
+  "Photonics Engineer",
+  "FPGA Engineer",
+  "VLSI/Chip Design Engineer",
+  "PCB Design Engineer",
+  "Signal Integrity Engineer",
+  "Power Systems Engineer (Tech)",
+  "Battery Technology Engineer",
+  "Digital Twin Engineer",
+  "GIS Engineer",
+  "Mapping & Geospatial Engineer",
+  "Remote Sensing Engineer",
+  "Drone Software Engineer",
+  "Supply Chain Technology Analyst",
+  "HealthTech Engineer",
+  "MedTech Software Developer",
+  "Legal Tech Engineer",
+  "EdTech Developer",
+  "Software Engineering Intern",
+
+  "Data Science Intern",
+
+  "Machine Learning Intern",
+
+  "Product Management Intern",
+
+  "UX Design Intern",
+
+  "Cybersecurity Intern",
+
+  "DevOps Intern",
+
+  "Cloud Engineering Intern",
+
+  "Frontend Engineering Intern",
+
+  "Backend Engineering Intern",
+
+  "Mobile Engineering Intern",
+
+  "QA Engineering Intern",
+
+  "Data Engineering Intern",
+
+  "Business Intelligence Intern",
+
+  "Technical Writing Intern",
+
+  "Developer Advocacy Intern",
+
+  "Research Engineering Intern",
+
+  "AI Research Intern",
+
+  "Computer Vision Research Intern",
+
+  "NLP Research Intern",
+
+  "Robotics Research Intern",
+
+  "Quantum Computing Research Intern",
+
+  "Human-Computer Interaction Researcher",
+
+  "Computational Biology Researcher",
+
+  "Systems Research Scientist",
+
+  "Programming Languages Researcher",
+
+  "Distributed Systems Researcher",
+
+  "Computer Architecture Researcher",
+
+  "Cryptography Researcher",
+
+  "Privacy & Security Researcher",
+
+  "Formal Verification Researcher",
+
+  "Human-Robot Interaction Researcher",
+
+  "Explainable AI Researcher",
+
+  "Federated Learning Researcher",
+
+  "Graph Neural Network Researcher",
+
+  "Multimodal AI Researcher",
+
+  "Neuromorphic Computing Researcher",
+
+  "Computational Neuroscience Researcher",
+
+  "Social Computing Researcher",
+
+  "Information Retrieval Researcher",
+
+  "Usability Researcher",
+
+  "Cognitive Systems Researcher",
+
+  "Algorithm Research Scientist",
+
+  "Theoretical Computer Science Researcher",
+
+  "Network Science Researcher",
+
+  "Computational Social Scientist",
+
+  "Research Software Engineer",
+
+  "Research Data Scientist",
+
+  "Applied Scientist",
+
+  "Research Analyst (Tech)",
+
+  "Lab Research Engineer",
+
+  "Postdoctoral Research Fellow (CS)",
+
+  "PhD Research Associate (CS)",
+
+  "Open Source Research Contributor",
+
+  "Technology Policy Researcher",
+
+  "Digital Forensics Analyst",
+
+  "Malware Research Analyst",
+
+  "Vulnerability Research Engineer",
+
+  "Exploit Development Researcher",
+
+  "Reverse Engineer",
+
+  "Hardware Security Researcher",
+
+  "Side-Channel Attack Researcher",
+
+  "Zero Trust Architecture Researcher",
+
+  "Cloud Security Researcher",
+
+  "Network Security Researcher",
+
+  "Threat Modelling Analyst",
+
+  "Incident Response Analyst",
+
+  "IT Audit Analyst",
+
+  "Risk & Compliance Intern",
+
+  "Security Operations Intern",
+
+  "IT Helpdesk Intern",
+
+  "Systems Administration Intern",
+
+  "Network Engineering Intern",
+
+  "Database Administration Intern",
+
+  "Infrastructure Engineering Intern",
+
+  "Site Reliability Intern",
+
+  "Platform Engineering Intern",
+
+  "Technical Program Management Intern",
+
+  "Scrum Intern / Agile Analyst Intern",
+
+  "Solutions Engineering Intern",
+
+  "IT Project Management Intern",
+
+  "IT Procurement Intern",
+
+  "ERP Implementation Intern",
+
+  "CRM Administrator Intern",
+
+  "Data Governance Intern",
+
+  "Data Quality Intern",
+
+  "Growth Analytics Intern",
+
+  "Web Analytics Intern",
+
+  "SEO Engineering Intern",
+
+  "Payments Engineering Intern",
+
+  "Fintech Research Analyst",
+
+  "Blockchain Research Intern",
+
+  "Web3 Research Analyst",
+
+  "IoT Research Engineer",
+
+  "Edge AI Research Intern",
+
+  "GIS Research Intern",
+
+  "HealthTech Research Analyst",
+
+  "EdTech Research Intern",
+
+  "LegalTech Research Intern",
+
+  "AgriTech Research Engineer"
+
+
+]}

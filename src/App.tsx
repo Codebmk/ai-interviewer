@@ -32,8 +32,8 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     
     if (!jobTitle.trim()) {
       setError('Please enter a job title to begin your preparation.');
