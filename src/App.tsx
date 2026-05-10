@@ -71,7 +71,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[var(--color-background)]">
-      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         <header className="text-center mb-10 w-full">
           <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-4 tracking-tight">
             Interview Warmup Buddy

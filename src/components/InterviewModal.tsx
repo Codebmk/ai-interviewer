@@ -1,5 +1,6 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, Loader2, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { InterviewQuestion } from '../services/aiService';
 import { QuestionCard } from './QuestionCard';
 
@@ -38,6 +39,33 @@ export const InterviewModal = ({
   setAnswers,
   jobTitle
 }: InterviewModalProps) => {
+  const [sessionTime, setSessionTime] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentIdx]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isOpen && !loading && questions.length > 0) {
+      interval = setInterval(() => {
+        setSessionTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, loading, questions.length]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const isCurrentAnswerEmpty = !answers[currentIdx]?.trim();
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -48,8 +76,12 @@ export const InterviewModal = ({
           className="fixed inset-0 z-50 bg-white flex flex-col font-sans"
           id="fullscreen-modal"
         >
-          {/* Modal Header - Only Close Button on Right */}
-          <div className="px-6 py-4 flex justify-end bg-white">
+          {/* Modal Header */}
+          <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-slate-50">
+            <div className="flex items-center gap-2 text-slate-400 font-mono text-sm bg-slate-50 px-3 py-1.5 rounded-full">
+              <Clock className="w-4 h-4" />
+              <span>{formatTime(sessionTime)}</span>
+            </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
@@ -60,9 +92,9 @@ export const InterviewModal = ({
           </div>
 
           {/* Modal Body */}
-          <div className="flex-1 overflow-y-auto bg-slate-50/50">
-            <div className="min-h-full flex flex-col items-center justify-center p-6 sm:p-12">
-              <div className="w-full max-w-3xl py-8">
+          <div className="flex-1 overflow-y-auto bg-slate-50/50" ref={scrollContainerRef}>
+            <div className="min-h-full flex flex-col items-center pt-8 pb-12 px-6">
+              <div className="w-full max-w-3xl">
                 <AnimatePresence mode="wait">
                 {loading ? (
                   <motion.div
@@ -109,22 +141,6 @@ export const InterviewModal = ({
                   </motion.div>
                 ) : questions.length > 0 ? (
                   <div className="space-y-8">
-                    {/* Progress Stepper */}
-                    <div className="flex justify-between items-center mb-12 w-full">
-                      {questions.map((_, i) => (
-                        <div key={i} className="flex flex-1 items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 ${
-                            i <= currentIdx ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-200 text-slate-400'
-                          }`}>
-                            {i < currentIdx ? <CheckCircle2 className="w-6 h-6" /> : i + 1}
-                          </div>
-                          {i < questions.length - 1 && (
-                            <div className={`flex-1 h-1 mx-2 rounded ${i < currentIdx ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
                     <QuestionCard 
                       question={questions[currentIdx]} 
                       index={currentIdx} 
@@ -150,7 +166,8 @@ export const InterviewModal = ({
                       {currentIdx === questions.length - 1 ? (
                         <button
                           onClick={onClose}
-                          className="material-button px-10 py-4 shadow-blue-200/50"
+                          disabled={isCurrentAnswerEmpty}
+                          className="material-button px-10 py-4 shadow-blue-200/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
                         >
                           Finish Prep
                           <CheckCircle2 className="w-5 h-5" />
@@ -158,7 +175,8 @@ export const InterviewModal = ({
                       ) : (
                         <button
                           onClick={onNext}
-                          className="material-button px-10 py-4 shadow-blue-200/50 group"
+                          disabled={isCurrentAnswerEmpty}
+                          className="material-button px-10 py-4 shadow-blue-200/50 group disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
                         >
                           Next Question
                           <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />

@@ -45,7 +45,7 @@ export const SearchSection = ({ jobTitle, setJobTitle, handleSubmit, loading }: 
   };
 
   return (
-    <section id="search-section" className="max-w-2xl mx-auto relative" ref={containerRef}>
+    <section id="search-section" className="w-full relative" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative group">
         <div className="relative flex items-center">
           <Briefcase className="absolute left-6 text-slate-400 w-5 h-5" />
