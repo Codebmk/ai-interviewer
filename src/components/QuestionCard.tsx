@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronRight, Sparkles, Lightbulb, Eye, EyeOff } from 'lucide-react';
 import { InterviewQuestion } from '../services/aiService';
 
 interface QuestionCardProps {
@@ -10,6 +11,9 @@ interface QuestionCardProps {
 }
 
 export const QuestionCard = ({ question, index, answer, onAnswerChange }: QuestionCardProps) => {
+  const [showHint, setShowHint] = useState(false);
+  const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -17,8 +21,17 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
       exit={{ opacity: 0, x: -20 }}
       className="space-y-8"
     >
-      <div className="material-paper p-8 sm:p-12 shadow-2xl bg-white ring-1 ring-slate-100">
-        <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em] mb-4 block">Question {index + 1} of 3</span>
+      <div className="material-paper p-8 sm:p-12 shadow-2xl bg-white ring-1 ring-slate-100 relative overflow-hidden">
+        {/* Progress Background Accent */}
+        <div className="absolute top-0 left-0 w-1 h-full bg-blue-600/10" />
+
+        <div className="flex justify-between items-start mb-6">
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em]">Question {index + 1} of 3</span>
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <span className={wordCount > 50 ? 'text-blue-600' : ''}>{wordCount} words</span>
+          </div>
+        </div>
+
         <h3 className="text-3xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
           {question.question}
         </h3>
@@ -30,21 +43,58 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
               id={`answer-input-${index}`}
               rows={6}
               className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-700 bg-slate-50/50 text-lg leading-relaxed placeholder:text-slate-300 placeholder:font-light"
-              placeholder="Type your answer here to refine your thoughts..."
+              placeholder="Start typing your answer here..."
               value={answer}
               onChange={(e) => onAnswerChange(e.target.value)}
             />
           </div>
 
-          <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 flex gap-4">
-            <div className="text-blue-500 flex-shrink-0">
-              <Sparkles className="w-5 h-5 mt-1" />
+          <div className="flex flex-col gap-4">
+            {/* rationale card */}
+            <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 flex gap-4">
+              <div className="text-blue-500 flex-shrink-0">
+                <Sparkles className="w-5 h-5 mt-1" />
+              </div>
+              <div>
+                <span className="block text-xs font-bold uppercase tracking-wider text-blue-700/70 mb-1">Coach Note</span>
+                <p className="text-slate-600 text-sm leading-relaxed italic">
+                  "{question.rationale}"
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="block text-xs font-bold uppercase tracking-wider text-blue-700/70 mb-1">Coach Note</span>
-              <p className="text-slate-600 text-sm leading-relaxed italic">
-                "{question.rationale}"
-              </p>
+
+            {/* Hint Section */}
+            <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+              <button 
+                onClick={() => setShowHint(!showHint)}
+                className="w-full p-4 flex items-center justify-between text-slate-500 hover:bg-slate-50 transition-colors"
+                id="hint-toggle-button"
+              >
+                <div className="flex items-center gap-2">
+                  <Lightbulb className={`w-4 h-4 ${showHint ? 'text-amber-500' : 'text-slate-400'}`} />
+                  <span className="text-sm font-semibold">Suggested Framework</span>
+                </div>
+                {showHint ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+              
+              <AnimatePresence>
+                {showHint && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 pt-0 border-t border-slate-50">
+                      <div className="bg-slate-50 p-4 rounded-lg">
+                        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
+                          {question.framework}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

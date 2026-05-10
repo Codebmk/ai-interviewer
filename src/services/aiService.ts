@@ -5,6 +5,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export interface InterviewQuestion {
   question: string;
   rationale: string;
+  framework: string;
 }
 
 export async function generateInterviewQuestions(jobTitle: string): Promise<InterviewQuestion[]> {
@@ -12,7 +13,10 @@ export async function generateInterviewQuestions(jobTitle: string): Promise<Inte
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate 3 thoughtful, professional interview questions for the role of "${jobTitle}". 
-      Include a brief rationale for why each question is important for this specific role.`,
+      For each question:
+      1. Provide the question text.
+      2. Provide a brief rationale for why it's important.
+      3. Provide a suggested answer framework (e.g. STAR method for behavioral, structured steps for technical).`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -28,8 +32,12 @@ export async function generateInterviewQuestions(jobTitle: string): Promise<Inte
                 type: Type.STRING,
                 description: "Why this question is relevant for the role.",
               },
+              framework: {
+                type: Type.STRING,
+                description: "A suggested answer framework (STAR method or technical steps).",
+              },
             },
-            required: ["question", "rationale"],
+            required: ["question", "rationale", "framework"],
           },
         },
       },
