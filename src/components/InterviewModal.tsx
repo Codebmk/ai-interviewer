@@ -53,6 +53,7 @@ export const InterviewModal = ({
   const [sessionTime, setSessionTime] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
+  const [roundScores, setRoundScores] = useState<Record<number, SessionFeedback['scores']>>({});
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingRoundMessage, setLoadingRoundMessage] = useState<string | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
@@ -67,6 +68,7 @@ export const InterviewModal = ({
       setSessionTime(0);
       setCurrentRound(1);
       setLoadingRoundMessage(null);
+      setRoundScores({});
     }
   }, [isOpen]);
 
@@ -110,6 +112,7 @@ export const InterviewModal = ({
       }));
       const feedback = await getSessionFeedback(jobTitle, currentSessionData, currentRound);
       setSessionFeedback(feedback);
+      setRoundScores(prev => ({ ...prev, [currentRound]: feedback.scores }));
       setIsFinished(true);
     } catch (err) {
       console.error(err);
@@ -130,6 +133,7 @@ export const InterviewModal = ({
         setRoundQuestions(newQuestions);
         setAnswers(newQuestions.map(() => ''));
         setRoundAnswers(newQuestions.map(() => ''));
+        setRoundScores({}); // Clear scores for fresh Round 1
       } else if (currentRound === 2) {
         // Round 2 retry: Use previous dimension feedback if available
         const sessionData = roundQuestions.map((q, i) => ({ question: q.question, answer: roundAnswers[i] }));
@@ -171,6 +175,28 @@ export const InterviewModal = ({
       setIsFinished(false);
       setSessionFeedback(null);
       onReset(); // Reset parent index to 0
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSummary(false);
+      setLoadingRoundMessage(null);
+    }
+  };
+
+  const handleRestartPractice = async () => {
+    setLoadingSummary(true);
+    setLoadingRoundMessage("Going back to Round 1 for more practice...");
+    try {
+      const newQuestions = await generateInterviewQuestions(jobTitle);
+      setQuestions(newQuestions);
+      setRoundQuestions(newQuestions);
+      setAnswers(newQuestions.map(() => ''));
+      setRoundAnswers(newQuestions.map(() => ''));
+      setRoundScores({});
+      setCurrentRound(1);
+      setIsFinished(false);
+      setSessionFeedback(null);
+      onReset();
     } catch (err) {
       console.error(err);
     } finally {
@@ -255,7 +281,9 @@ export const InterviewModal = ({
                     questions={roundQuestions}
                     answers={roundAnswers}
                     feedback={sessionFeedback}
+                    previousFeedback={currentRound > 1 ? roundScores[currentRound - 1] : undefined}
                     onRetryRound={handleRetryRound}
+                    onRestartPractice={handleRestartPractice}
                     onContinue={handleContinueToNextRound}
                     onNewRole={onClose}
                     jobTitle={jobTitle}
@@ -280,6 +308,7 @@ export const InterviewModal = ({
                     <QuestionCard 
                       question={roundQuestions[currentIdx]} 
                       index={currentIdx} 
+                      totalQuestions={roundQuestions.length}
                       answer={roundAnswers[currentIdx]}
                       onAnswerChange={(val) => {
                         const newAnswers = [...roundAnswers];

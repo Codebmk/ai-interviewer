@@ -6,12 +6,13 @@ import { InterviewQuestion, InterviewFeedback, getFeedbackForAnswer } from '../s
 interface QuestionCardProps {
   question: InterviewQuestion;
   index: number;
+  totalQuestions: number;
   answer: string;
   onAnswerChange: (val: string) => void;
   hideGuidance?: boolean;
 }
 
-export const QuestionCard = ({ question, index, answer, onAnswerChange, hideGuidance }: QuestionCardProps) => {
+export const QuestionCard = ({ question, index, totalQuestions, answer, onAnswerChange, hideGuidance }: QuestionCardProps) => {
   const [showHint, setShowHint] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
@@ -63,7 +64,7 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange, hideGuid
         <div className="absolute top-0 left-0 w-1 h-full bg-blue-600/10" />
 
         <div className="flex justify-between items-start mb-6">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em]">Question {index + 1} of 3</span>
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em]">Question {index + 1} of {totalQuestions}</span>
           <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
             <span className={wordCount > 50 ? 'text-blue-600' : ''}>{wordCount} words</span>
           </div>

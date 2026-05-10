@@ -1,12 +1,40 @@
-import { motion } from 'motion/react';
-import { CheckCircle2, RotateCcw, PlusCircle, Trophy, Target, BookOpen, Sparkles, AlertTriangle, Quote, TrendingUp, Info, ArrowRight, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, RotateCcw, PlusCircle, Trophy, Target, BookOpen, Sparkles, AlertTriangle, Quote, TrendingUp, Info, ArrowRight, Zap, Star, Shield, Layout, User, Minus, ChevronDown, ChevronUp } from 'lucide-react';
 import { InterviewQuestion, SessionFeedback } from '../services/aiService';
+
+const TruncatedText = ({ text, limit = 200 }: { text: string; limit?: number }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const shouldTruncate = text.length > limit;
+
+  if (!shouldTruncate) return <p className="text-slate-700 leading-relaxed italic text-sm">{text}</p>;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-slate-700 leading-relaxed italic text-sm">
+        {isExpanded ? text : `${text.slice(0, limit)}...`}
+      </p>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors flex items-center gap-1"
+      >
+        {isExpanded ? (
+          <>Show Less <ChevronUp className="w-3 h-3" /></>
+        ) : (
+          <>Show More <ChevronDown className="w-3 h-3" /></>
+        )}
+      </button>
+    </div>
+  );
+};
 
 interface SummaryViewProps {
   questions: InterviewQuestion[];
   answers: string[];
   feedback: SessionFeedback | null;
+  previousFeedback?: SessionFeedback['scores'];
   onRetryRound: () => void;
+  onRestartPractice: () => void;
   onContinue: () => void;
   onNewRole: () => void;
   jobTitle: string;
@@ -17,14 +45,38 @@ export const SummaryView = ({
   questions, 
   answers, 
   feedback, 
+  previousFeedback,
   onRetryRound, 
+  onRestartPractice,
   onContinue,
   onNewRole, 
   jobTitle,
   currentRound 
 }: SummaryViewProps) => {
   const isFinalRound = currentRound === 3;
-  
+
+  const getScoreLabel = (score: number) => {
+    if (score <= 40) return 'Getting Started';
+    if (score <= 65) return 'Building Confidence';
+    if (score <= 85) return 'Interview Ready';
+    return 'Exceptionally Prepared';
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score <= 40) return 'text-slate-500';
+    if (score <= 65) return 'text-amber-600';
+    if (score <= 85) return 'text-emerald-600';
+    return 'text-blue-600';
+  };
+
+  const calculateTotalScore = (scores: SessionFeedback['scores']) => {
+    const values = Object.values(scores).map(s => s.score);
+    return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+  };
+
+  const totalScore = feedback ? calculateTotalScore(feedback.scores) : 0;
+  const totalScoreLabel = getScoreLabel(totalScore);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -95,10 +147,8 @@ export const SummaryView = ({
                         <Quote className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Your Practice Response</span>
                       </div>
-                      <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 min-h-[150px]">
-                        <p className="text-slate-700 leading-relaxed italic text-sm">
-                          "{answers[idx] || 'No response provided.'}"
-                        </p>
+                      <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 min-h-[100px]">
+                        <TruncatedText text={answers[idx] || 'No response provided.'} />
                       </div>
                     </div>
 
@@ -107,10 +157,8 @@ export const SummaryView = ({
                         <Sparkles className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-widest">"Gold Standard" Benchmark</span>
                       </div>
-                      <div className="bg-blue-50/30 p-6 rounded-2xl border border-blue-100 min-h-[150px]">
-                        <p className="text-slate-800 leading-relaxed text-sm">
-                          {analysis?.benchmarkedAnswer || 'Generating benchmark...'}
-                        </p>
+                      <div className="bg-blue-50/30 p-6 rounded-2xl border border-blue-100 min-h-[100px]">
+                        <TruncatedText text={analysis?.benchmarkedAnswer || 'Generating benchmark...'} />
                       </div>
                     </div>
                   </div>
@@ -165,6 +213,97 @@ export const SummaryView = ({
           );
         })}
       </div>
+
+      {/* Interview Readiness Score Card */}
+      {feedback && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-slate-100 rounded-[3rem] p-8 md:p-20 shadow-2xl relative overflow-hidden ring-1 ring-slate-200/50"
+        >
+          {/* Background Accents */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 blur-[120px] rounded-full -mr-48 -mt-48" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-50/50 blur-[120px] rounded-full -ml-48 -mb-48" />
+
+          <div className="relative z-10 space-y-16">
+            <div className="text-center space-y-8">
+              <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-slate-100 bg-slate-50 text-slate-400 text-[11px] font-black uppercase tracking-[0.3em]">
+                {isFinalRound ? 'Official Final Report' : `Round ${currentRound} Analytics`}
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className={`text-7xl md:text-8xl font-black ${getScoreColor(totalScore)} tracking-tighter filter drop-shadow-sm`}>
+                  {totalScoreLabel}
+                </h3>
+                <p className="text-3xl font-bold text-slate-800 max-w-2xl mx-auto leading-tight tracking-tight">
+                  "{feedback.headline}"
+                </p>
+              </div>
+
+              <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>{jobTitle}</span>
+                </div>
+                <span className="w-1.5 h-1.5 bg-slate-200 rounded-full hidden md:block" />
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  <span>{currentRound} Rounds Completed</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              {(Object.entries(feedback.scores) as [keyof SessionFeedback['scores'], SessionFeedback['scores'][keyof SessionFeedback['scores']]][]).map(([key, data]) => {
+                const prevScore = previousFeedback?.[key]?.score;
+                const delta = prevScore !== undefined ? data.score - prevScore : null;
+                
+                return (
+                  <div key={key} className="bg-slate-50/50 border border-slate-100 p-8 rounded-[2.5rem] space-y-6 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all group relative">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 group-hover:text-blue-500 transition-all">
+                        {key === 'clarity' && <Sparkles className="w-5 h-5" />}
+                        {key === 'specificity' && <Target className="w-5 h-5" />}
+                        {key === 'structure' && <Layout className="w-5 h-5" />}
+                        {key === 'ownership' && <User className="w-5 h-5" />}
+                        {key === 'conciseness' && <Minus className="w-5 h-5" />}
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-3xl font-black text-slate-900 leading-none">{data.score}</span>
+                        {!isFinalRound && currentRound > 1 && delta !== null && (
+                          <span className={`text-[11px] font-black flex items-center justify-end mt-1 gap-0.5 ${delta > 0 ? 'text-emerald-600' : delta < 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                            {delta > 0 && <TrendingUp className="w-3 h-3" />}
+                            {delta === 0 && <Minus className="w-3 h-3" />}
+                            {delta !== 0 ? (delta > 0 ? `+${delta}` : delta) : 'Stable'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</span>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">{data.explanation}</p>
+                    </div>
+                    <div className="pt-5 border-t border-slate-100/50">
+                      <span className="block text-[10px] font-black uppercase text-blue-600 mb-1.5 tracking-wider">Coach's Tip</span>
+                      <p className="text-[11px] text-slate-600 leading-relaxed italic">"{data.tip}"</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <button 
+                onClick={onRestartPractice}
+                className="flex items-center gap-3 px-10 py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 shadow-2xl shadow-slate-900/10 transition-all group"
+              >
+                <RotateCcw className="w-5 h-5 transition-transform group-hover:-rotate-45" />
+                Improve weakest dimension — Practice Round 1
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-12 border-t border-slate-100">

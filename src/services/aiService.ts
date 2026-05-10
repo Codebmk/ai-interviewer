@@ -61,10 +61,24 @@ export async function getFeedbackForAnswer(question: string, answer: string): Pr
   }
 }
 
+export interface ReadinessScore {
+  score: number;
+  explanation: string;
+  tip: string;
+}
+
 export interface SessionFeedback {
   strength: string;
   improvement: string;
+  headline: string;
   weakestDimensions?: string[];
+  scores: {
+    clarity: ReadinessScore;
+    specificity: ReadinessScore;
+    structure: ReadinessScore;
+    ownership: ReadinessScore;
+    conciseness: ReadinessScore;
+  };
   detailedAnalysis: {
     benchmarkedAnswer: string;
     toneCritique: string;
@@ -77,7 +91,7 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interview coach. Review the responses for the role of "${jobTitle}" for Round ${round} and provide a high-level summary and detailed analysis.
+      contents: `You are an expert interview coach. Review the responses for the role of "${jobTitle}" for Round ${round} and provide a high-level summary, an interview readiness score, and detailed analysis.
       
       Session Data:
       ${sessionData.map((d, i) => `Q${i + 1}: ${d.question}\nA${i + 1}: ${d.answer}`).join('\n\n')}
@@ -85,8 +99,11 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
       Provide:
       1. One major strength observed.
       2. One specific thing to work on.
-      3. ${round === 1 ? 'Identify exactly TWO professional dimensions (e.g., "Conflict Resolution", "Strategic Thinking", "Technical Depth") where the candidate was weakest in these answers.' : ''}
-      4. For each question:
+      3. A one-line shareable headline statement summarizing total performance (e.g. "Strong communicator, needs more specificity around impact").
+      4. Numerical scores (0-100) and analysis for: Clarity, Specificity, Structure, Ownership, Conciseness.
+         - For each: a score, a one-line explanation of what it means in this context, and one targeted tip.
+      5. ${round === 1 ? 'Identify exactly TWO professional dimensions (e.g., "Conflict Resolution", "Strategic Thinking", "Technical Depth") where the candidate was weakest in these answers.' : ''}
+      6. For each question:
          - A "Gold Standard" benchmarked answer.
          - A tone critique focusing on clarity and ownership.
          - A list of vague claims found (e.g. "helped with" vs "led").
@@ -98,10 +115,42 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
           properties: {
             strength: { type: Type.STRING },
             improvement: { type: Type.STRING },
+            headline: { type: Type.STRING },
             weakestDimensions: { 
               type: Type.ARRAY, 
               items: { type: Type.STRING },
               description: "Only provide if Round is 1. Exactly 2 weakest dimensions."
+            },
+            scores: {
+              type: Type.OBJECT,
+              properties: {
+                clarity: { 
+                  type: Type.OBJECT, 
+                  properties: { score: { type: Type.NUMBER }, explanation: { type: Type.STRING }, tip: { type: Type.STRING } },
+                  required: ["score", "explanation", "tip"]
+                },
+                specificity: { 
+                  type: Type.OBJECT, 
+                  properties: { score: { type: Type.NUMBER }, explanation: { type: Type.STRING }, tip: { type: Type.STRING } },
+                  required: ["score", "explanation", "tip"]
+                },
+                structure: { 
+                  type: Type.OBJECT, 
+                  properties: { score: { type: Type.NUMBER }, explanation: { type: Type.STRING }, tip: { type: Type.STRING } },
+                  required: ["score", "explanation", "tip"]
+                },
+                ownership: { 
+                  type: Type.OBJECT, 
+                  properties: { score: { type: Type.NUMBER }, explanation: { type: Type.STRING }, tip: { type: Type.STRING } },
+                  required: ["score", "explanation", "tip"]
+                },
+                conciseness: { 
+                  type: Type.OBJECT, 
+                  properties: { score: { type: Type.NUMBER }, explanation: { type: Type.STRING }, tip: { type: Type.STRING } },
+                  required: ["score", "explanation", "tip"]
+                },
+              },
+              required: ["clarity", "specificity", "structure", "ownership", "conciseness"]
             },
             detailedAnalysis: {
               type: Type.ARRAY,
@@ -123,7 +172,7 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
               }
             },
           },
-          required: ["strength", "improvement", "detailedAnalysis"],
+          required: ["strength", "improvement", "headline", "scores", "detailedAnalysis"],
         },
       },
     });
