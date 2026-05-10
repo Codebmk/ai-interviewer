@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2, RotateCcw, Target, Zap, ArrowRight, PlusCircle } from 'lucide-react';
-import { InterviewQuestion, SessionFeedback, getSessionFeedback, generateFollowUpQuestions, generateCurveballQuestion, generateInterviewQuestions } from '../services/aiService';
+import { Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2, RotateCcw, Target, Zap, ArrowRight, PlusCircle, Brain, Code } from 'lucide-react';
+import { InterviewQuestion, SessionFeedback, getSessionFeedback, generateFollowUpQuestions, generateCurveballQuestion, generateInterviewQuestions, InterviewType } from '../services/aiService';
 import { QuestionCard } from './QuestionCard';
 import { SummaryView } from './SummaryView';
 
@@ -32,6 +32,8 @@ interface InterviewModalProps {
   answers: string[];
   setAnswers: (answers: string[]) => void;
   jobTitle: string;
+  onStartGeneration: (type: InterviewType) => void;
+  interviewType: InterviewType | null;
 }
 
 export const InterviewModal = ({
@@ -48,9 +50,12 @@ export const InterviewModal = ({
   onReset,
   answers,
   setAnswers,
-  jobTitle
+  jobTitle,
+  onStartGeneration,
+  interviewType
 }: InterviewModalProps) => {
   const [sessionTime, setSessionTime] = useState(0);
+  const [selectedType, setSelectedType] = useState<InterviewType | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
   const [roundScores, setRoundScores] = useState<Record<number, SessionFeedback['scores']>>({});
@@ -69,6 +74,7 @@ export const InterviewModal = ({
       setCurrentRound(1);
       setLoadingRoundMessage(null);
       setRoundScores({});
+      setSelectedType(null);
     }
   }, [isOpen]);
 
@@ -110,7 +116,7 @@ export const InterviewModal = ({
         question: q.question,
         answer: roundAnswers[i]
       }));
-      const feedback = await getSessionFeedback(jobTitle, currentSessionData, currentRound);
+      const feedback = await getSessionFeedback(jobTitle, interviewType!, currentSessionData, currentRound);
       setSessionFeedback(feedback);
       setRoundScores(prev => ({ ...prev, [currentRound]: feedback.scores }));
       setIsFinished(true);
@@ -128,7 +134,7 @@ export const InterviewModal = ({
     setLoadingRoundMessage(`Restarting Round ${currentRound} with fresh challenges...`);
     try {
       if (currentRound === 1) {
-        const newQuestions = await generateInterviewQuestions(jobTitle);
+        const newQuestions = await generateInterviewQuestions(jobTitle, interviewType!);
         setQuestions(newQuestions);
         setRoundQuestions(newQuestions);
         setAnswers(newQuestions.map(() => ''));
@@ -137,11 +143,11 @@ export const InterviewModal = ({
       } else if (currentRound === 2) {
         // Round 2 retry: Use previous dimension feedback if available
         const sessionData = roundQuestions.map((q, i) => ({ question: q.question, answer: roundAnswers[i] }));
-        const followUps = await generateFollowUpQuestions(jobTitle, sessionData, sessionFeedback?.weakestDimensions || ["General Effectiveness"]);
+        const followUps = await generateFollowUpQuestions(jobTitle, interviewType!, sessionData, sessionFeedback?.weakestDimensions || ["General Effectiveness"]);
         setRoundQuestions(followUps);
         setRoundAnswers(followUps.map(() => ''));
       } else {
-        const curveball = await generateCurveballQuestion(jobTitle);
+        const curveball = await generateCurveballQuestion(jobTitle, interviewType!);
         setRoundQuestions([curveball]);
         setRoundAnswers(['']);
       }
@@ -163,11 +169,11 @@ export const InterviewModal = ({
     try {
       const sessionData = roundQuestions.map((q, i) => ({ question: q.question, answer: roundAnswers[i] }));
       if (nextRound === 2) {
-        const followUps = await generateFollowUpQuestions(jobTitle, sessionData, sessionFeedback?.weakestDimensions || ["Communication"]);
+        const followUps = await generateFollowUpQuestions(jobTitle, interviewType!, sessionData, sessionFeedback?.weakestDimensions || ["Communication"]);
         setRoundQuestions(followUps);
         setRoundAnswers(followUps.map(() => ''));
       } else if (nextRound === 3) {
-        const curveball = await generateCurveballQuestion(jobTitle);
+        const curveball = await generateCurveballQuestion(jobTitle, interviewType!);
         setRoundQuestions([curveball]);
         setRoundAnswers(['']);
       }
@@ -187,7 +193,7 @@ export const InterviewModal = ({
     setLoadingSummary(true);
     setLoadingRoundMessage("Going back to Round 1 for more practice...");
     try {
-      const newQuestions = await generateInterviewQuestions(jobTitle);
+      const newQuestions = await generateInterviewQuestions(jobTitle, interviewType!);
       setQuestions(newQuestions);
       setRoundQuestions(newQuestions);
       setAnswers(newQuestions.map(() => ''));
@@ -218,7 +224,26 @@ export const InterviewModal = ({
           id="fullscreen-modal"
         >
           {/* Modal Header */}
-          <div className="px-6 py-4 flex justify-center items-center bg-white border-b border-slate-50">
+          <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-slate-50">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={onClose}
+                className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 hover:text-slate-900"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              {interviewType && (
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 leading-none mb-1">
+                    {interviewType} Interview
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 leading-none truncate max-w-[200px]">
+                    {jobTitle}
+                  </span>
+                </div>
+              )}
+            </div>
+            
             <div className="flex items-center gap-2 text-slate-400 font-mono text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
               <Clock className="w-4 h-4" />
               <span>{formatTime(sessionTime)}</span>
@@ -261,6 +286,87 @@ export const InterviewModal = ({
                     <p className="text-slate-400 mt-2">
                       {loadingSummary ? "Just a few more seconds to refine your performance data." : "Setting up your professional sandbox..."}
                     </p>
+                  </motion.div>
+                ) : !interviewType ? (
+                  <motion.div
+                    key="type-selection"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-3xl mx-auto py-12 space-y-12"
+                  >
+                    <div className="text-center space-y-4">
+                      <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                        Choose your focus
+                      </h2>
+                      <p className="text-slate-500 text-lg max-w-lg mx-auto">
+                        We'll tailor the questions and feedback based on the interview format you want to practice.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <button
+                        onClick={() => setSelectedType('Behavioural')}
+                        className={`flex flex-col items-center p-10 border-2 rounded-[2.5rem] transition-all group text-center space-y-6 ${
+                          selectedType === 'Behavioural' 
+                            ? 'border-blue-600 bg-blue-50/50 shadow-xl shadow-blue-500/10' 
+                            : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg'
+                        }`}
+                      >
+                        <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all ${
+                          selectedType === 'Behavioural' ? 'bg-blue-600 text-white translate-y-[-4px]' : 'bg-slate-50 text-slate-400 group-hover:scale-110'
+                        }`}>
+                          <Brain className="w-8 h-8" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className={`block text-xl font-black ${selectedType === 'Behavioural' ? 'text-blue-900' : 'text-slate-900'}`}>
+                            Behavioural Interview
+                          </span>
+                          <span className="block text-sm text-slate-500 leading-relaxed">
+                            Past experiences, soft skills, and situational judgment.
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedType('Technical')}
+                        className={`flex flex-col items-center p-10 border-2 rounded-[2.5rem] transition-all group text-center space-y-6 ${
+                          selectedType === 'Technical' 
+                            ? 'border-blue-600 bg-blue-50/50 shadow-xl shadow-blue-500/10' 
+                            : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg'
+                        }`}
+                      >
+                        <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all ${
+                          selectedType === 'Technical' ? 'bg-blue-600 text-white translate-y-[-4px]' : 'bg-slate-50 text-slate-400 group-hover:scale-110'
+                        }`}>
+                          <Code className="w-8 h-8" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className={`block text-xl font-black ${selectedType === 'Technical' ? 'text-blue-900' : 'text-slate-900'}`}>
+                            Technical Interview
+                          </span>
+                          <span className="block text-sm text-slate-500 leading-relaxed">
+                            Concepts, problem solving, and domain knowledge.
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-6 pt-4">
+                      <button
+                        onClick={() => selectedType && onStartGeneration(selectedType)}
+                        disabled={!selectedType}
+                        className="material-button px-16 py-5 text-lg shadow-xl shadow-blue-500/20 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
+                      >
+                        Start Round 1 Practice
+                        <ArrowRight className="w-6 h-6" />
+                      </button>
+                      <button 
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-slate-600 font-bold text-sm uppercase tracking-widest"
+                      >
+                        Change Role Target
+                      </button>
+                    </div>
                   </motion.div>
                 ) : error ? (
                   <motion.div

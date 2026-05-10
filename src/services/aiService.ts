@@ -2,6 +2,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+export type InterviewType = 'Behavioural' | 'Technical';
+
 export interface InterviewQuestion {
   question: string;
   rationale: string;
@@ -87,11 +89,11 @@ export interface SessionFeedback {
   }[];
 }
 
-export async function getSessionFeedback(jobTitle: string, sessionData: { question: string; answer: string }[], round: number): Promise<SessionFeedback> {
+export async function getSessionFeedback(jobTitle: string, interviewType: InterviewType, sessionData: { question: string; answer: string }[], round: number): Promise<SessionFeedback> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interview coach. Review the responses for the role of "${jobTitle}" for Round ${round} and provide a high-level summary, an interview readiness score, and detailed analysis.
+      contents: `You are an expert interview coach. Review the responses for a ${interviewType} interview for the role of "${jobTitle}" (Round ${round}) and provide a high-level summary, an interview readiness score, and detailed analysis.
       
       Session Data:
       ${sessionData.map((d, i) => `Q${i + 1}: ${d.question}\nA${i + 1}: ${d.answer}`).join('\n\n')}
@@ -99,15 +101,15 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
       Provide:
       1. One major strength observed.
       2. One specific thing to work on.
-      3. A one-line shareable headline statement summarizing total performance (e.g. "Strong communicator, needs more specificity around impact").
+      3. A one-line shareable headline statement summarizing total performance.
       4. Numerical scores (0-100) and analysis for: Clarity, Specificity, Structure, Ownership, Conciseness.
-         - For each: a score, a one-line explanation of what it means in this context, and one targeted tip.
-      5. ${round === 1 ? 'Identify exactly TWO professional dimensions (e.g., "Conflict Resolution", "Strategic Thinking", "Technical Depth") where the candidate was weakest in these answers.' : ''}
+         - For each: a score, a one-line explanation, and one targeted tip.
+      5. ${round === 1 ? 'Identify exactly TWO professional dimensions where the candidate was weakest.' : ''}
       6. For each question:
-         - A "Gold Standard" benchmarked answer.
+         - A "Gold Standard" benchmarked answer for a ${interviewType} context.
          - A tone critique focusing on clarity and ownership.
-         - A list of vague claims found (e.g. "helped with" vs "led").
-         - A list of any passive language found (e.g. "was done" vs "I did").`,
+         - A list of vague claims found.
+         - A list of any passive language found.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -188,11 +190,11 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
   }
 }
 
-export async function generateFollowUpQuestions(jobTitle: string, sessionData: { question: string; answer: string }[], weakDimensions: string[]): Promise<InterviewQuestion[]> {
+export async function generateFollowUpQuestions(jobTitle: string, interviewType: InterviewType, sessionData: { question: string; answer: string }[], weakDimensions: string[]): Promise<InterviewQuestion[]> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interviewer for "${jobTitle}".
+      contents: `You are an expert ${interviewType} interviewer for "${jobTitle}".
       Candidate has finished Round 1. Their weakest areas were: ${weakDimensions.join(', ')}.
       
       Generate 2 deep-dive follow-up questions specifically targeting these weak dimensions based on their previous answers.
@@ -233,11 +235,11 @@ export async function generateFollowUpQuestions(jobTitle: string, sessionData: {
   }
 }
 
-export async function generateCurveballQuestion(jobTitle: string): Promise<InterviewQuestion> {
+export async function generateCurveballQuestion(jobTitle: string, interviewType: InterviewType): Promise<InterviewQuestion> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate 1 unexpected "curveball" question for the role of "${jobTitle}". 
+      contents: `Generate 1 unexpected "curveball" question for a ${interviewType} interview for the role of "${jobTitle}". 
       This should be a question designed to test the candidate's ability to think on their feet, their cultural fit, or their values (e.g. "If you could change one thing about our industry overnight, what would it be?").
       
       Provide the question, rationale, and a suggested framework.`,
@@ -263,15 +265,15 @@ export async function generateCurveballQuestion(jobTitle: string): Promise<Inter
   }
 }
 
-export async function generateInterviewQuestions(jobTitle: string): Promise<InterviewQuestion[]> {
+export async function generateInterviewQuestions(jobTitle: string, interviewType: InterviewType): Promise<InterviewQuestion[]> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate 3 thoughtful, professional interview questions for the role of "${jobTitle}". 
+      contents: `Generate 3 thoughtful, professional ${interviewType} interview questions for the role of "${jobTitle}". 
       For each question:
       1. Provide the question text.
       2. Provide a brief rationale for why it's important.
-      3. Provide a suggested answer framework (e.g. STAR method for behavioral, structured steps for technical).`,
+      3. Provide a suggested answer framework (e.g. STAR method for behavioral, structured steps for ${interviewType === 'Technical' ? 'technical response' : 'soft skills'}).`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

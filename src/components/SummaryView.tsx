@@ -253,7 +253,7 @@ export const SummaryView = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {(Object.entries(feedback.scores) as [keyof SessionFeedback['scores'], SessionFeedback['scores'][keyof SessionFeedback['scores']]][]).map(([key, data]) => {
                 const prevScore = previousFeedback?.[key]?.score;
                 const delta = prevScore !== undefined ? data.score - prevScore : null;

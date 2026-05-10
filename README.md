@@ -5,7 +5,8 @@ A high-performance, AI-driven interview preparation platform designed to help ca
 ## 🚀 The User Journey
 
 1. **Role Selection**: Enter any job title (e.g., "Senior Product Manager", "Staff Software Engineer").
-2. **Round 1 (Warmup)**: Answer 3 standard interview questions tailored to the role. Get real-time "Brutal Feedback" on any answer.
+2. **Interview Type Selection**: Choose between a **Behavioural** or **Technical** focus. Each track uses a distinct AI logic to generate relevant questions and benchmark answers.
+3. **Round 1 (Warmup)**: Answer 3 standard interview questions tailored to the chosen type and role.
 3. **Analytics & Decision**: Review your performance with an AI-generated **Interview Readiness Report**. Decide to practice Round 1 again or advance.
 4. **Round 2 (Deep Dive)**: Face 2 challenging follow-up questions generated specifically from your Round 1 answers, targeting your two weakest dimensions.
 5. **Round 3 (The Curveball)**: One high-stakes unexpected question with no hints, frameworks, or guidance—simulating the pressure of a real interview.

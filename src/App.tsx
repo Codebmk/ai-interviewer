@@ -1,5 +1,5 @@
 import { useState, FormEvent, useEffect } from 'react';
-import { generateInterviewQuestions, InterviewQuestion } from './services/aiService';
+import { generateInterviewQuestions, InterviewQuestion, InterviewType } from './services/aiService';
 import { SearchSection } from './components/SearchSection';
 import { InterviewModal } from './components/InterviewModal';
 
@@ -18,6 +18,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<string[]>(['', '', '']);
+  const [interviewType, setInterviewType] = useState<InterviewType | null>(null);
 
   // Cycle loading messages
   useEffect(() => {
@@ -32,23 +33,26 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleSubmit = async (e?: FormEvent) => {
+  const handleSubmit = (e?: FormEvent) => {
     e?.preventDefault();
-    
     if (!jobTitle.trim()) {
       setError('Please enter a job title to begin your preparation.');
       return;
     }
-
-    setLoading(true);
     setError(null);
     setQuestions([]);
     setIsModalOpen(true);
     setCurrentIdx(0);
     setAnswers(['', '', '']);
+    setInterviewType(null);
+  };
 
+  const startGeneration = async (type: InterviewType) => {
+    setLoading(true);
+    setError(null);
+    setInterviewType(type);
     try {
-      const results = await generateInterviewQuestions(jobTitle);
+      const results = await generateInterviewQuestions(jobTitle, type);
       setQuestions(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -71,7 +75,6 @@ export default function App() {
 
   const handleReset = () => {
     setCurrentIdx(0);
-    // Revert to Round 1 state: first 3 questions, 3 empty answers
     setQuestions(prev => prev.slice(0, 3));
     setAnswers(['', '', '']);
   };
@@ -97,7 +100,11 @@ export default function App() {
 
         <InterviewModal 
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setQuestions([]);
+            setLoading(false);
+          }}
           loading={loading}
           loadingStep={loadingStep}
           error={error}
@@ -110,6 +117,8 @@ export default function App() {
           setAnswers={setAnswers}
           onReset={handleReset}
           jobTitle={jobTitle}
+          onStartGeneration={startGeneration}
+          interviewType={interviewType}
         />
       </main>
 
