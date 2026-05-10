@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Sparkles, Lightbulb, Eye, EyeOff } from 'lucide-react';
-import { InterviewQuestion } from '../services/aiService';
+import { ChevronRight, Sparkles, Lightbulb, Eye, EyeOff, Send, MessageSquare, ListChecks, Loader2 } from 'lucide-react';
+import { InterviewQuestion, InterviewFeedback, getFeedbackForAnswer } from '../services/aiService';
 
 interface QuestionCardProps {
   question: InterviewQuestion;
@@ -12,7 +12,26 @@ interface QuestionCardProps {
 
 export const QuestionCard = ({ question, index, answer, onAnswerChange }: QuestionCardProps) => {
   const [showHint, setShowHint] = useState(false);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+
+  const handleGetFeedback = async () => {
+    if (!answer.trim()) return;
+    
+    setLoadingFeedback(true);
+    setError(null);
+    try {
+      const result = await getFeedbackForAnswer(question.question, answer);
+      setFeedback(result);
+    } catch (err) {
+      setError('Could not get feedback. Please try again.');
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
 
   return (
     <motion.div
@@ -45,11 +64,72 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
               className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-700 bg-slate-50/50 text-lg leading-relaxed placeholder:text-slate-300 placeholder:font-light"
               placeholder="Start typing your answer here..."
               value={answer}
-              onChange={(e) => onAnswerChange(e.target.value)}
+              onChange={(e) => {
+                onAnswerChange(e.target.value);
+                // Clear feedback if answer changes significantly
+                if (feedback) setFeedback(null);
+              }}
             />
+            
+            <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <button
+                onClick={handleGetFeedback}
+                disabled={loadingFeedback || !answer.trim()}
+                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                {loadingFeedback ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                    Submit for Feedback
+                  </>
+                )}
+              </button>
+
+              {error && <span className="text-red-500 text-xs font-medium">{error}</span>}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <AnimatePresence>
+            {feedback && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
+              >
+                {/* Observations */}
+                <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3 text-emerald-700">
+                    <ListChecks className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-wider">Observations</span>
+                  </div>
+                  <p className="text-slate-700 text-sm leading-relaxed">
+                    {feedback.observations}
+                  </p>
+                </div>
+
+                {/* Follow-up Question */}
+                <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3 text-amber-700">
+                    <MessageSquare className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-wider">Potential Follow-up</span>
+                  </div>
+                  <p className="text-slate-900 font-medium text-sm leading-relaxed">
+                    "{feedback.followUp}"
+                  </p>
+                  <p className="mt-2 text-slate-500 text-xs italic">
+                    Think about how you'd bridge this follow-up to your current answer.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
             {/* rationale card */}
             <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 flex gap-4">
               <div className="text-blue-500 flex-shrink-0">

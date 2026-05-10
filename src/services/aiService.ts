@@ -8,6 +8,53 @@ export interface InterviewQuestion {
   framework: string;
 }
 
+export interface InterviewFeedback {
+  observations: string;
+  followUp: string;
+}
+
+export async function getFeedbackForAnswer(question: string, answer: string): Promise<InterviewFeedback> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `You are an expert interviewer. Provide constructive feedback on the following candidate response.
+      
+      Question: "${question}"
+      Candidate Answer: "${answer}"
+      
+      Provide:
+      1. Specific observations about the answer (strengths, weaknesses, what's missing). Avoid generic scores. Focus on things like "your answer lacks a concrete outcome" or "strong on context, weak on your personal contribution".
+      2. A logical follow-up question the interviewer might ask based on this answer to dig deeper.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            observations: {
+              type: Type.STRING,
+              description: "Specific constructive observations about the answer.",
+            },
+            followUp: {
+              type: Type.STRING,
+              description: "A logical follow-up question based on the answer.",
+            },
+          },
+          required: ["observations", "followUp"],
+        },
+      },
+    });
+
+    if (!response.text) {
+      throw new Error("No response from AI");
+    }
+
+    return JSON.parse(response.text.trim());
+  } catch (error) {
+    console.error("AI Feedback Error:", error);
+    throw new Error("Failed to get feedback. Please try again.");
+  }
+}
+
 export async function generateInterviewQuestions(jobTitle: string): Promise<InterviewQuestion[]> {
   try {
     const response = await ai.models.generateContent({
