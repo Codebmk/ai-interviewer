@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { InterviewQuestion } from '../services/aiService';
+import { X, Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react';
+import { InterviewQuestion, SessionFeedback, getSessionFeedback } from '../services/aiService';
 import { QuestionCard } from './QuestionCard';
+import { SummaryView } from './SummaryView';
 
 const LOADING_MESSAGES = [
   "Analysing the role…",
@@ -20,6 +21,7 @@ interface InterviewModalProps {
   currentIdx: number;
   onNext: () => void;
   onPrev: () => void;
+  onReset: () => void;
   answers: string[];
   setAnswers: (answers: string[]) => void;
   jobTitle: string;
@@ -35,18 +37,30 @@ export const InterviewModal = ({
   currentIdx,
   onNext,
   onPrev,
+  onReset,
   answers,
   setAnswers,
   jobTitle
 }: InterviewModalProps) => {
   const [sessionTime, setSessionTime] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+  const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsFinished(false);
+      setSessionFeedback(null);
+      setSessionTime(0);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentIdx]);
+  }, [currentIdx, isFinished]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -62,6 +76,32 @@ export const InterviewModal = ({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleFinish = async () => {
+    setLoadingSummary(true);
+    try {
+      const sessionData = questions.map((q, i) => ({
+        question: q.question,
+        answer: answers[i]
+      }));
+      const feedback = await getSessionFeedback(jobTitle, sessionData);
+      setSessionFeedback(feedback);
+      setIsFinished(true);
+    } catch (err) {
+      console.error(err);
+      // Still show finish even if feedback fails
+      setIsFinished(true);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setIsFinished(false);
+    setSessionFeedback(null);
+    setSessionTime(0);
+    onReset();
   };
 
   const isCurrentAnswerEmpty = !answers[currentIdx]?.trim();
@@ -94,15 +134,15 @@ export const InterviewModal = ({
           {/* Modal Body */}
           <div className="flex-1 overflow-y-auto bg-slate-50/50" ref={scrollContainerRef}>
             <div className="min-h-full flex flex-col items-center pt-8 pb-12 px-6">
-              <div className="w-full max-w-3xl">
+              <div className="w-full max-w-4xl">
                 <AnimatePresence mode="wait">
-                {loading ? (
+                {loading || loadingSummary ? (
                   <motion.div
                     key="loading-state"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="text-center"
+                    className="text-center py-20"
                   >
                     <div className="mb-8 relative flex justify-center">
                       <motion.div
@@ -114,16 +154,18 @@ export const InterviewModal = ({
                     </div>
                     <AnimatePresence mode="wait">
                       <motion.p
-                        key={loadingStep}
+                        key={loadingSummary ? 'finishing' : loadingStep}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         className="text-2xl font-medium text-slate-800"
                       >
-                        {LOADING_MESSAGES[loadingStep]}
+                        {loadingSummary ? "Generating your session insights..." : LOADING_MESSAGES[loadingStep]}
                       </motion.p>
                     </AnimatePresence>
-                    <p className="text-slate-400 mt-2">Setting up your professional sandbox...</p>
+                    <p className="text-slate-400 mt-2">
+                      {loadingSummary ? "Just a few more seconds to review your performance." : "Setting up your professional sandbox..."}
+                    </p>
                   </motion.div>
                 ) : error ? (
                   <motion.div
@@ -139,6 +181,15 @@ export const InterviewModal = ({
                       Return to Home
                     </button>
                   </motion.div>
+                ) : isFinished ? (
+                  <SummaryView 
+                    questions={questions}
+                    answers={answers}
+                    feedback={sessionFeedback}
+                    onRetry={handleRetry}
+                    onNewRole={onClose}
+                    jobTitle={jobTitle}
+                  />
                 ) : questions.length > 0 ? (
                   <div className="space-y-8">
                     <QuestionCard 
@@ -165,12 +216,18 @@ export const InterviewModal = ({
                       
                       {currentIdx === questions.length - 1 ? (
                         <button
-                          onClick={onClose}
-                          disabled={isCurrentAnswerEmpty}
+                          onClick={handleFinish}
+                          disabled={isCurrentAnswerEmpty || loadingSummary}
                           className="material-button px-10 py-4 shadow-blue-200/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
                         >
-                          Finish Prep
-                          <CheckCircle2 className="w-5 h-5" />
+                          {loadingSummary ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              Finish Prep
+                              <CheckCircle2 className="w-5 h-5" />
+                            </>
+                          )}
                         </button>
                       ) : (
                         <button

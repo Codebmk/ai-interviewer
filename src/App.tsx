@@ -69,6 +69,11 @@ export default function App() {
     }
   };
 
+  const handleReset = () => {
+    setCurrentIdx(0);
+    setAnswers(['', '', '']);
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[var(--color-background)]">
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
@@ -100,6 +105,7 @@ export default function App() {
           onPrev={handlePrev}
           answers={answers}
           setAnswers={setAnswers}
+          onReset={handleReset}
           jobTitle={jobTitle}
         />
       </main>

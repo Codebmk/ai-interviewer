@@ -55,6 +55,53 @@ export async function getFeedbackForAnswer(question: string, answer: string): Pr
   }
 }
 
+export interface SessionFeedback {
+  strength: string;
+  improvement: string;
+}
+
+export async function getSessionFeedback(jobTitle: string, sessionData: { question: string; answer: string }[]): Promise<SessionFeedback> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `You are an expert interview coach. Review the following practice session for the role of "${jobTitle}" and provide a high-level summary.
+      
+      Session Data:
+      ${sessionData.map((d, i) => `Q${i + 1}: ${d.question}\nA${i + 1}: ${d.answer}`).join('\n\n')}
+      
+      Provide:
+      1. One major strength observed across the session.
+      2. One specific thing to work on to improve for the real interview.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            strength: {
+              type: Type.STRING,
+              description: "One major strength observed.",
+            },
+            improvement: {
+              type: Type.STRING,
+              description: "One specific thing to work on.",
+            },
+          },
+          required: ["strength", "improvement"],
+        },
+      },
+    });
+
+    if (!response.text) {
+      throw new Error("No response from AI");
+    }
+
+    return JSON.parse(response.text.trim());
+  } catch (error) {
+    console.error("Session Feedback Error:", error);
+    throw new Error("Failed to get session feedback.");
+  }
+}
+
 export async function generateInterviewQuestions(jobTitle: string): Promise<InterviewQuestion[]> {
   try {
     const response = await ai.models.generateContent({
