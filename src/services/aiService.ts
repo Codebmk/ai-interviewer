@@ -64,35 +64,59 @@ export async function getFeedbackForAnswer(question: string, answer: string): Pr
 export interface SessionFeedback {
   strength: string;
   improvement: string;
+  detailedAnalysis: {
+    benchmarkedAnswer: string;
+    toneCritique: string;
+    vagueClaims: string[];
+    passiveLanguage: string[];
+  }[];
 }
 
 export async function getSessionFeedback(jobTitle: string, sessionData: { question: string; answer: string }[]): Promise<SessionFeedback> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interview coach. Review the following practice session for the role of "${jobTitle}" and provide a high-level summary.
+      contents: `You are an expert interview coach. Review the following practice session for the role of "${jobTitle}" and provide a high-level summary and detailed analysis for each answer.
       
       Session Data:
       ${sessionData.map((d, i) => `Q${i + 1}: ${d.question}\nA${i + 1}: ${d.answer}`).join('\n\n')}
       
       Provide:
       1. One major strength observed across the session.
-      2. One specific thing to work on to improve for the real interview.`,
+      2. One specific thing to work on to improve for the real interview.
+      3. For each of the ${sessionData.length} questions:
+         - A "Gold Standard" benchmarked answer that is highly effective for this role.
+         - A tone critique focusing on clarity and ownership.
+         - A list of any vague claims found (e.g. "helped with" vs "led").
+         - A list of any passive language found (e.g. "was done" vs "I did").`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            strength: {
-              type: Type.STRING,
-              description: "One major strength observed.",
-            },
-            improvement: {
-              type: Type.STRING,
-              description: "One specific thing to work on.",
+            strength: { type: Type.STRING },
+            improvement: { type: Type.STRING },
+            detailedAnalysis: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  benchmarkedAnswer: { type: Type.STRING },
+                  toneCritique: { type: Type.STRING },
+                  vagueClaims: { 
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  },
+                  passiveLanguage: { 
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  },
+                },
+                required: ["benchmarkedAnswer", "toneCritique", "vagueClaims", "passiveLanguage"],
+              }
             },
           },
-          required: ["strength", "improvement"],
+          required: ["strength", "improvement", "detailedAnalysis"],
         },
       },
     });
