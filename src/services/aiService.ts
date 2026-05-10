@@ -10,6 +10,8 @@ export interface InterviewQuestion {
 
 export interface InterviewFeedback {
   observations: string;
+  weakSentence: string | null;
+  improvementTip: string;
   followUp: string;
 }
 
@@ -17,29 +19,33 @@ export async function getFeedbackForAnswer(question: string, answer: string): Pr
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interviewer. Provide constructive feedback on the following candidate response.
+      contents: `You are a brutally honest, expert senior interviewer. Critique the following candidate response.
       
       Question: "${question}"
       Candidate Answer: "${answer}"
       
-      Provide:
-      1. Specific observations about the answer (strengths, weaknesses, what's missing). Avoid generic scores. Focus on things like "your answer lacks a concrete outcome" or "strong on context, weak on your personal contribution".
-      2. A logical follow-up question the interviewer might ask based on this answer to dig deeper.`,
+      Instructions:
+      1. Be brutally specific. Do not give participation trophies.
+      2. If it's a behavioral question, identify EXACTLY which part of the STAR framework (Situation, Task, Action, Result) is missing or weak.
+      3. Identify exactly ONE specific sentence in the answer that is the weakest or most problematic.
+      4. Provide a "Pro-Tip" for improvement.
+      
+      Provide your response in JSON format with these exact keys:
+      - observations: A direct critique (e.g., "You described the situation well but never stated what YOU specifically did").
+      - weakSentence: The exact string from the candidate's answer that is weakest. If the answer is too short to pick one, use null.
+      - improvementTip: A specific actionable tip to fix the weakness.
+      - followUp: A logical, challenging follow-up question.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            observations: {
-              type: Type.STRING,
-              description: "Specific constructive observations about the answer.",
-            },
-            followUp: {
-              type: Type.STRING,
-              description: "A logical follow-up question based on the answer.",
-            },
+            observations: { type: Type.STRING },
+            weakSentence: { type: Type.STRING, nullable: true },
+            improvementTip: { type: Type.STRING },
+            followUp: { type: Type.STRING },
           },
-          required: ["observations", "followUp"],
+          required: ["observations", "weakSentence", "improvementTip", "followUp"],
         },
       },
     });

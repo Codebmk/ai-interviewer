@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Sparkles, Lightbulb, Eye, EyeOff, Send, MessageSquare, ListChecks, Loader2 } from 'lucide-react';
+import { ChevronRight, Sparkles, Lightbulb, Eye, EyeOff, Send, MessageSquare, ListChecks, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
 import { InterviewQuestion, InterviewFeedback, getFeedbackForAnswer } from '../services/aiService';
 
 interface QuestionCardProps {
@@ -33,6 +33,23 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
     }
   };
 
+  const renderFeedbackHighlights = () => {
+    if (!feedback?.weakSentence || !answer) return <p className="text-slate-700 text-sm leading-relaxed">{answer}</p>;
+
+    const parts = answer.split(feedback.weakSentence);
+    if (parts.length === 1) return <p className="text-slate-700 text-sm leading-relaxed">{answer}</p>;
+
+    return (
+      <p className="text-slate-700 text-sm leading-relaxed">
+        {parts[0]}
+        <mark className="bg-red-100 text-red-900 px-1 rounded border-b-2 border-red-300 font-medium cursor-help" title="Weak point identified by AI">
+          {feedback.weakSentence}
+        </mark>
+        {parts[1]}
+      </p>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -61,54 +78,75 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
             <textarea
               id={`answer-input-${index}`}
               rows={6}
-              className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-700 bg-slate-50/50 text-lg leading-relaxed placeholder:text-slate-300 placeholder:font-light"
+              className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-700 bg-slate-50/50 text-lg leading-relaxed placeholder:text-slate-300 placeholder:font-light mb-2"
               placeholder="Start typing your answer here..."
               value={answer}
               onChange={(e) => {
                 onAnswerChange(e.target.value);
-                // Clear feedback if answer changes significantly
                 if (feedback) setFeedback(null);
               }}
             />
             
-            <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <button
                 onClick={handleGetFeedback}
                 disabled={loadingFeedback || !answer.trim()}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
               >
                 {loadingFeedback ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Analyzing...
+                    Analyzing Honestly...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-                    Submit for Feedback
+                    <TrendingUp className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                    Get Brutal Feedback
                   </>
                 )}
               </button>
 
-              {error && <span className="text-red-500 text-xs font-medium">{error}</span>}
+              {error && <span className="text-red-500 text-xs font-medium bg-red-50 px-3 py-1 rounded-full border border-red-100">{error}</span>}
             </div>
           </div>
 
           <AnimatePresence>
             {feedback && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="space-y-4"
               >
+                {/* Highlighted Answer View */}
+                {feedback.weakSentence && (
+                  <div className="bg-slate-50 border border-slate-100 p-6 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3 text-slate-500">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-bold text-[10px] uppercase tracking-widest">Analysis Preview</span>
+                    </div>
+                    {renderFeedbackHighlights()}
+                  </div>
+                )}
+
                 {/* Observations */}
+                <div className="bg-red-50 border border-red-100 p-6 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3 text-red-700">
+                    <ListChecks className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-wider">The Critique</span>
+                  </div>
+                  <p className="text-slate-700 text-sm font-medium leading-relaxed">
+                    {feedback.observations}
+                  </p>
+                </div>
+
+                {/* Pro Tip */}
                 <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-xl">
                   <div className="flex items-center gap-2 mb-3 text-emerald-700">
-                    <ListChecks className="w-5 h-5" />
-                    <span className="font-bold text-sm uppercase tracking-wider">Observations</span>
+                    <TrendingUp className="w-5 h-5" />
+                    <span className="font-bold text-sm uppercase tracking-wider">Pro-Tip for Success</span>
                   </div>
-                  <p className="text-slate-700 text-sm leading-relaxed">
-                    {feedback.observations}
+                  <p className="text-slate-800 text-sm leading-relaxed">
+                    {feedback.improvementTip}
                   </p>
                 </div>
 
@@ -116,13 +154,10 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
                 <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl">
                   <div className="flex items-center gap-2 mb-3 text-amber-700">
                     <MessageSquare className="w-5 h-5" />
-                    <span className="font-bold text-sm uppercase tracking-wider">Potential Follow-up</span>
+                    <span className="font-bold text-sm uppercase tracking-wider">Difficult Follow-up</span>
                   </div>
-                  <p className="text-slate-900 font-medium text-sm leading-relaxed">
+                  <p className="text-slate-900 font-bold text-md leading-relaxed">
                     "{feedback.followUp}"
-                  </p>
-                  <p className="mt-2 text-slate-500 text-xs italic">
-                    Think about how you'd bridge this follow-up to your current answer.
                   </p>
                 </div>
               </motion.div>
@@ -136,7 +171,7 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
                 <Sparkles className="w-5 h-5 mt-1" />
               </div>
               <div>
-                <span className="block text-xs font-bold uppercase tracking-wider text-blue-700/70 mb-1">Coach Note</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700/70 mb-1">Why this matters</span>
                 <p className="text-slate-600 text-sm leading-relaxed italic">
                   "{question.rationale}"
                 </p>
@@ -152,7 +187,7 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
               >
                 <div className="flex items-center gap-2">
                   <Lightbulb className={`w-4 h-4 ${showHint ? 'text-amber-500' : 'text-slate-400'}`} />
-                  <span className="text-sm font-semibold">Suggested Framework</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">Mastery Framework</span>
                 </div>
                 {showHint ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -166,8 +201,8 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
                     className="overflow-hidden"
                   >
                     <div className="p-4 pt-0 border-t border-slate-50">
-                      <div className="bg-slate-50 p-4 rounded-lg">
-                        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap font-mono">
                           {question.framework}
                         </p>
                       </div>

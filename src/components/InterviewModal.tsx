@@ -64,13 +64,13 @@ export const InterviewModal = ({
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isOpen && !loading && questions.length > 0) {
+    if (isOpen && !loading && !loadingSummary && !isFinished && questions.length > 0) {
       interval = setInterval(() => {
         setSessionTime((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isOpen, loading, questions.length]);
+  }, [isOpen, loading, loadingSummary, isFinished, questions.length]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -90,7 +90,6 @@ export const InterviewModal = ({
       setIsFinished(true);
     } catch (err) {
       console.error(err);
-      // Still show finish even if feedback fails
       setIsFinished(true);
     } finally {
       setLoadingSummary(false);
@@ -117,18 +116,12 @@ export const InterviewModal = ({
           id="fullscreen-modal"
         >
           {/* Modal Header */}
-          <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-slate-50">
-            <div className="flex items-center gap-2 text-slate-400 font-mono text-sm bg-slate-50 px-3 py-1.5 rounded-full">
+          <div className="px-6 py-4 flex justify-center items-center bg-white border-b border-slate-50">
+            <div className="flex items-center gap-2 text-slate-400 font-mono text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
               <Clock className="w-4 h-4" />
               <span>{formatTime(sessionTime)}</span>
+              {isFinished && <span className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase">Final Time</span>}
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
-              aria-label="Exit prep"
-            >
-              <X className="w-6 h-6" />
-            </button>
           </div>
 
           {/* Modal Body */}
