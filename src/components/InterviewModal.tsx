@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react';
-import { InterviewQuestion, SessionFeedback, getSessionFeedback } from '../services/aiService';
+import { Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2, RotateCcw, Target, Zap, ArrowRight, PlusCircle } from 'lucide-react';
+import { InterviewQuestion, SessionFeedback, getSessionFeedback, generateFollowUpQuestions, generateCurveballQuestion, generateInterviewQuestions } from '../services/aiService';
 import { QuestionCard } from './QuestionCard';
 import { SummaryView } from './SummaryView';
 
@@ -11,6 +11,12 @@ const LOADING_MESSAGES = [
   "Crafting your questions…"
 ];
 
+const ROUND_INFO = {
+  1: { name: "Round 1: Standard Questions", color: "text-blue-600", bg: "bg-blue-50" },
+  2: { name: "Round 2: Deep Dive", color: "text-indigo-600", bg: "bg-indigo-50" },
+  3: { name: "The Curveball Round", color: "text-rose-600", bg: "bg-rose-50" }
+};
+
 interface InterviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,6 +24,7 @@ interface InterviewModalProps {
   loadingStep: number;
   error: string | null;
   questions: InterviewQuestion[];
+  setQuestions: (questions: InterviewQuestion[]) => void;
   currentIdx: number;
   onNext: () => void;
   onPrev: () => void;
@@ -34,6 +41,7 @@ export const InterviewModal = ({
   loadingStep,
   error,
   questions,
+  setQuestions,
   currentIdx,
   onNext,
   onPrev,
@@ -46,6 +54,10 @@ export const InterviewModal = ({
   const [isFinished, setIsFinished] = useState(false);
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [loadingRoundMessage, setLoadingRoundMessage] = useState<string | null>(null);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [roundQuestions, setRoundQuestions] = useState<InterviewQuestion[]>([]);
+  const [roundAnswers, setRoundAnswers] = useState<string[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,8 +65,18 @@ export const InterviewModal = ({
       setIsFinished(false);
       setSessionFeedback(null);
       setSessionTime(0);
+      setCurrentRound(1);
+      setLoadingRoundMessage(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (questions.length > 0 && currentRound === 1) {
+      // Initialize Round 1 state from parent
+      setRoundQuestions(questions);
+      setRoundAnswers(answers);
+    }
+  }, [questions, answers, currentRound]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -78,14 +100,15 @@ export const InterviewModal = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleFinish = async () => {
+  const handleFinishRound = async () => {
     setLoadingSummary(true);
+    setLoadingRoundMessage(`Analyzing Round ${currentRound} and preparing your feedback...`);
     try {
-      const sessionData = questions.map((q, i) => ({
+      const currentSessionData = roundQuestions.map((q, i) => ({
         question: q.question,
-        answer: answers[i]
+        answer: roundAnswers[i]
       }));
-      const feedback = await getSessionFeedback(jobTitle, sessionData);
+      const feedback = await getSessionFeedback(jobTitle, currentSessionData, currentRound);
       setSessionFeedback(feedback);
       setIsFinished(true);
     } catch (err) {
@@ -93,17 +116,70 @@ export const InterviewModal = ({
       setIsFinished(true);
     } finally {
       setLoadingSummary(false);
+      setLoadingRoundMessage(null);
     }
   };
 
-  const handleRetry = () => {
-    setIsFinished(false);
-    setSessionFeedback(null);
-    setSessionTime(0);
-    onReset();
+  const handleRetryRound = async () => {
+    setLoadingSummary(true);
+    setLoadingRoundMessage(`Restarting Round ${currentRound} with fresh challenges...`);
+    try {
+      if (currentRound === 1) {
+        const newQuestions = await generateInterviewQuestions(jobTitle);
+        setQuestions(newQuestions);
+        setRoundQuestions(newQuestions);
+        setAnswers(newQuestions.map(() => ''));
+        setRoundAnswers(newQuestions.map(() => ''));
+      } else if (currentRound === 2) {
+        // Round 2 retry: Use previous dimension feedback if available
+        const sessionData = roundQuestions.map((q, i) => ({ question: q.question, answer: roundAnswers[i] }));
+        const followUps = await generateFollowUpQuestions(jobTitle, sessionData, sessionFeedback?.weakestDimensions || ["General Effectiveness"]);
+        setRoundQuestions(followUps);
+        setRoundAnswers(followUps.map(() => ''));
+      } else {
+        const curveball = await generateCurveballQuestion(jobTitle);
+        setRoundQuestions([curveball]);
+        setRoundAnswers(['']);
+      }
+      setIsFinished(false);
+      setSessionFeedback(null);
+      onReset(); // Reset parent index to 0
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSummary(false);
+      setLoadingRoundMessage(null);
+    }
   };
 
-  const isCurrentAnswerEmpty = !answers[currentIdx]?.trim();
+  const handleContinueToNextRound = async () => {
+    setLoadingSummary(true);
+    const nextRound = currentRound + 1;
+    setLoadingRoundMessage(`Moving to Round ${nextRound}...`);
+    try {
+      const sessionData = roundQuestions.map((q, i) => ({ question: q.question, answer: roundAnswers[i] }));
+      if (nextRound === 2) {
+        const followUps = await generateFollowUpQuestions(jobTitle, sessionData, sessionFeedback?.weakestDimensions || ["Communication"]);
+        setRoundQuestions(followUps);
+        setRoundAnswers(followUps.map(() => ''));
+      } else if (nextRound === 3) {
+        const curveball = await generateCurveballQuestion(jobTitle);
+        setRoundQuestions([curveball]);
+        setRoundAnswers(['']);
+      }
+      setCurrentRound(nextRound);
+      setIsFinished(false);
+      setSessionFeedback(null);
+      onReset(); // Reset parent index to 0
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSummary(false);
+      setLoadingRoundMessage(null);
+    }
+  };
+
+  const isCurrentAnswerEmpty = !roundAnswers[currentIdx]?.trim();
 
   return (
     <AnimatePresence>
@@ -153,11 +229,11 @@ export const InterviewModal = ({
                         exit={{ opacity: 0, y: -10 }}
                         className="text-2xl font-medium text-slate-800"
                       >
-                        {loadingSummary ? "Generating your session insights..." : LOADING_MESSAGES[loadingStep]}
+                        {loadingSummary ? (loadingRoundMessage || "Generating your session insights...") : LOADING_MESSAGES[loadingStep]}
                       </motion.p>
                     </AnimatePresence>
                     <p className="text-slate-400 mt-2">
-                      {loadingSummary ? "Just a few more seconds to review your performance." : "Setting up your professional sandbox..."}
+                      {loadingSummary ? "Just a few more seconds to refine your performance data." : "Setting up your professional sandbox..."}
                     </p>
                   </motion.div>
                 ) : error ? (
@@ -176,24 +252,41 @@ export const InterviewModal = ({
                   </motion.div>
                 ) : isFinished ? (
                   <SummaryView 
-                    questions={questions}
-                    answers={answers}
+                    questions={roundQuestions}
+                    answers={roundAnswers}
                     feedback={sessionFeedback}
-                    onRetry={handleRetry}
+                    onRetryRound={handleRetryRound}
+                    onContinue={handleContinueToNextRound}
                     onNewRole={onClose}
                     jobTitle={jobTitle}
+                    currentRound={currentRound}
                   />
-                ) : questions.length > 0 ? (
+                ) : roundQuestions.length > 0 ? (
                   <div className="space-y-8">
+                    {/* Round Indicator */}
+                    {!isFinished && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-100 shadow-sm ${ROUND_INFO[currentRound as keyof typeof ROUND_INFO].bg}`}
+                      >
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${ROUND_INFO[currentRound as keyof typeof ROUND_INFO].color.replace('text', 'bg')}`} />
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${ROUND_INFO[currentRound as keyof typeof ROUND_INFO].color}`}>
+                          {ROUND_INFO[currentRound as keyof typeof ROUND_INFO].name}
+                        </span>
+                      </motion.div>
+                    )}
+
                     <QuestionCard 
-                      question={questions[currentIdx]} 
+                      question={roundQuestions[currentIdx]} 
                       index={currentIdx} 
-                      answer={answers[currentIdx]}
+                      answer={roundAnswers[currentIdx]}
                       onAnswerChange={(val) => {
-                        const newAnswers = [...answers];
+                        const newAnswers = [...roundAnswers];
                         newAnswers[currentIdx] = val;
-                        setAnswers(newAnswers);
+                        setRoundAnswers(newAnswers);
                       }}
+                      hideGuidance={currentRound === 3}
                     />
 
                     {/* Navigation Footer */}
@@ -207,9 +300,9 @@ export const InterviewModal = ({
                         Previous
                       </button>
                       
-                      {currentIdx === questions.length - 1 ? (
+                      {currentIdx === roundQuestions.length - 1 ? (
                         <button
-                          onClick={handleFinish}
+                          onClick={handleFinishRound}
                           disabled={isCurrentAnswerEmpty || loadingSummary}
                           className="material-button px-10 py-4 shadow-blue-200/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
                         >
@@ -217,7 +310,7 @@ export const InterviewModal = ({
                             <Loader2 className="w-5 h-5 animate-spin" />
                           ) : (
                             <>
-                              Finish Prep
+                              Finish Round {currentRound}
                               <CheckCircle2 className="w-5 h-5" />
                             </>
                           )}

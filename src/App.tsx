@@ -71,6 +71,8 @@ export default function App() {
 
   const handleReset = () => {
     setCurrentIdx(0);
+    // Revert to Round 1 state: first 3 questions, 3 empty answers
+    setQuestions(prev => prev.slice(0, 3));
     setAnswers(['', '', '']);
   };
 
@@ -100,6 +102,7 @@ export default function App() {
           loadingStep={loadingStep}
           error={error}
           questions={questions}
+          setQuestions={setQuestions}
           currentIdx={currentIdx}
           onNext={handleNext}
           onPrev={handlePrev}

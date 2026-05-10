@@ -64,6 +64,7 @@ export async function getFeedbackForAnswer(question: string, answer: string): Pr
 export interface SessionFeedback {
   strength: string;
   improvement: string;
+  weakestDimensions?: string[];
   detailedAnalysis: {
     benchmarkedAnswer: string;
     toneCritique: string;
@@ -72,22 +73,23 @@ export interface SessionFeedback {
   }[];
 }
 
-export async function getSessionFeedback(jobTitle: string, sessionData: { question: string; answer: string }[]): Promise<SessionFeedback> {
+export async function getSessionFeedback(jobTitle: string, sessionData: { question: string; answer: string }[], round: number): Promise<SessionFeedback> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are an expert interview coach. Review the following practice session for the role of "${jobTitle}" and provide a high-level summary and detailed analysis for each answer.
+      contents: `You are an expert interview coach. Review the responses for the role of "${jobTitle}" for Round ${round} and provide a high-level summary and detailed analysis.
       
       Session Data:
       ${sessionData.map((d, i) => `Q${i + 1}: ${d.question}\nA${i + 1}: ${d.answer}`).join('\n\n')}
       
       Provide:
-      1. One major strength observed across the session.
-      2. One specific thing to work on to improve for the real interview.
-      3. For each of the ${sessionData.length} questions:
-         - A "Gold Standard" benchmarked answer that is highly effective for this role.
+      1. One major strength observed.
+      2. One specific thing to work on.
+      3. ${round === 1 ? 'Identify exactly TWO professional dimensions (e.g., "Conflict Resolution", "Strategic Thinking", "Technical Depth") where the candidate was weakest in these answers.' : ''}
+      4. For each question:
+         - A "Gold Standard" benchmarked answer.
          - A tone critique focusing on clarity and ownership.
-         - A list of any vague claims found (e.g. "helped with" vs "led").
+         - A list of vague claims found (e.g. "helped with" vs "led").
          - A list of any passive language found (e.g. "was done" vs "I did").`,
       config: {
         responseMimeType: "application/json",
@@ -96,6 +98,11 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
           properties: {
             strength: { type: Type.STRING },
             improvement: { type: Type.STRING },
+            weakestDimensions: { 
+              type: Type.ARRAY, 
+              items: { type: Type.STRING },
+              description: "Only provide if Round is 1. Exactly 2 weakest dimensions."
+            },
             detailedAnalysis: {
               type: Type.ARRAY,
               items: {
@@ -129,6 +136,81 @@ export async function getSessionFeedback(jobTitle: string, sessionData: { questi
   } catch (error) {
     console.error("Session Feedback Error:", error);
     throw new Error("Failed to get session feedback.");
+  }
+}
+
+export async function generateFollowUpQuestions(jobTitle: string, sessionData: { question: string; answer: string }[], weakDimensions: string[]): Promise<InterviewQuestion[]> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `You are an expert interviewer for "${jobTitle}".
+      Candidate has finished Round 1. Their weakest areas were: ${weakDimensions.join(', ')}.
+      
+      Generate 2 deep-dive follow-up questions specifically targeting these weak dimensions based on their previous answers.
+      
+      Previous Context:
+      ${sessionData.map((d, i) => `Q: ${d.question}\nA: ${d.answer}`).join('\n\n')}
+      
+      Provide questions that force them to explain their logic or results in these specific areas.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  question: { type: Type.STRING },
+                  rationale: { type: Type.STRING },
+                  framework: { type: Type.STRING },
+                },
+                required: ["question", "rationale", "framework"],
+              },
+            },
+          },
+          required: ["questions"],
+        },
+      },
+    });
+
+    if (!response.text) throw new Error("No response");
+    const data = JSON.parse(response.text.trim());
+    return data.questions;
+  } catch (error) {
+    console.error("AI Follow-up Error:", error);
+    throw new Error("Failed to generate follow-up questions.");
+  }
+}
+
+export async function generateCurveballQuestion(jobTitle: string): Promise<InterviewQuestion> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Generate 1 unexpected "curveball" question for the role of "${jobTitle}". 
+      This should be a question designed to test the candidate's ability to think on their feet, their cultural fit, or their values (e.g. "If you could change one thing about our industry overnight, what would it be?").
+      
+      Provide the question, rationale, and a suggested framework.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            rationale: { type: Type.STRING },
+            framework: { type: Type.STRING },
+          },
+          required: ["question", "rationale", "framework"],
+        },
+      },
+    });
+
+    if (!response.text) throw new Error("No response");
+    return JSON.parse(response.text.trim());
+  } catch (error) {
+    console.error("AI Curveball Error:", error);
+    throw new Error("Failed to generate curveball question.");
   }
 }
 

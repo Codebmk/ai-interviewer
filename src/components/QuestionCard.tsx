@@ -8,9 +8,10 @@ interface QuestionCardProps {
   index: number;
   answer: string;
   onAnswerChange: (val: string) => void;
+  hideGuidance?: boolean;
 }
 
-export const QuestionCard = ({ question, index, answer, onAnswerChange }: QuestionCardProps) => {
+export const QuestionCard = ({ question, index, answer, onAnswerChange, hideGuidance }: QuestionCardProps) => {
   const [showHint, setShowHint] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
@@ -166,51 +167,55 @@ export const QuestionCard = ({ question, index, answer, onAnswerChange }: Questi
 
           <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
             {/* rationale card */}
-            <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 flex gap-4">
-              <div className="text-blue-500 flex-shrink-0">
-                <Sparkles className="w-5 h-5 mt-1" />
+            {!hideGuidance && (
+              <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 flex gap-4">
+                <div className="text-blue-500 flex-shrink-0">
+                  <Sparkles className="w-5 h-5 mt-1" />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700/70 mb-1">Why this matters</span>
+                  <p className="text-slate-600 text-sm leading-relaxed italic">
+                    "{question.rationale}"
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700/70 mb-1">Why this matters</span>
-                <p className="text-slate-600 text-sm leading-relaxed italic">
-                  "{question.rationale}"
-                </p>
-              </div>
-            </div>
+            )}
 
             {/* Hint Section */}
-            <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
-              <button 
-                onClick={() => setShowHint(!showHint)}
-                className="w-full p-4 flex items-center justify-between text-slate-500 hover:bg-slate-50 transition-colors"
-                id="hint-toggle-button"
-              >
-                <div className="flex items-center gap-2">
-                  <Lightbulb className={`w-4 h-4 ${showHint ? 'text-amber-500' : 'text-slate-400'}`} />
-                  <span className="text-xs font-bold uppercase tracking-widest">Mastery Framework</span>
-                </div>
-                {showHint ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-              
-              <AnimatePresence>
-                {showHint && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-4 pt-0 border-t border-slate-50">
-                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap font-mono">
-                          {question.framework}
-                        </p>
+            {!hideGuidance && (
+              <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                <button 
+                  onClick={() => setShowHint(!showHint)}
+                  className="w-full p-4 flex items-center justify-between text-slate-500 hover:bg-slate-50 transition-colors"
+                  id="hint-toggle-button"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className={`w-4 h-4 ${showHint ? 'text-amber-500' : 'text-slate-400'}`} />
+                    <span className="text-xs font-bold uppercase tracking-widest">Mastery Framework</span>
+                  </div>
+                  {showHint ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+                
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-4 pt-0 border-t border-slate-50">
+                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                          <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap font-mono">
+                            {question.framework}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </div>
       </div>

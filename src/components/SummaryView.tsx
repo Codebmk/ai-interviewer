@@ -1,17 +1,30 @@
 import { motion } from 'motion/react';
-import { CheckCircle2, RotateCcw, PlusCircle, Trophy, Target, BookOpen, Sparkles, AlertTriangle, Quote, TrendingUp, Info } from 'lucide-react';
+import { CheckCircle2, RotateCcw, PlusCircle, Trophy, Target, BookOpen, Sparkles, AlertTriangle, Quote, TrendingUp, Info, ArrowRight, Zap } from 'lucide-react';
 import { InterviewQuestion, SessionFeedback } from '../services/aiService';
 
 interface SummaryViewProps {
   questions: InterviewQuestion[];
   answers: string[];
   feedback: SessionFeedback | null;
-  onRetry: () => void;
+  onRetryRound: () => void;
+  onContinue: () => void;
   onNewRole: () => void;
   jobTitle: string;
+  currentRound: number;
 }
 
-export const SummaryView = ({ questions, answers, feedback, onRetry, onNewRole, jobTitle }: SummaryViewProps) => {
+export const SummaryView = ({ 
+  questions, 
+  answers, 
+  feedback, 
+  onRetryRound, 
+  onContinue,
+  onNewRole, 
+  jobTitle,
+  currentRound 
+}: SummaryViewProps) => {
+  const isFinalRound = currentRound === 3;
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -21,10 +34,16 @@ export const SummaryView = ({ questions, answers, feedback, onRetry, onNewRole, 
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wider mb-2">
           <CheckCircle2 className="w-5 h-5" />
-          Warmup Complete
+          Round {currentRound} Complete
         </div>
-        <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">Great job preparing for {jobTitle}!</h2>
-        <p className="text-slate-500 text-lg">Review your practice session and key takeaways below.</p>
+        <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+          {isFinalRound ? 'Interview Complete!' : `Great momentum in Round ${currentRound}!`}
+        </h2>
+        <p className="text-slate-500 text-lg">
+          {isFinalRound 
+            ? "You've finished all rounds. Review your final performance below."
+            : "Review your performance and decide your next move."}
+        </p>
       </div>
 
       {/* Session Note */}
@@ -148,21 +167,49 @@ export const SummaryView = ({ questions, answers, feedback, onRetry, onNewRole, 
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-12 border-t border-slate-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-12 border-t border-slate-100">
         <button
-          onClick={onRetry}
-          className="flex items-center gap-2 px-10 py-5 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-all group w-full sm:w-auto justify-center"
+          onClick={onRetryRound}
+          className="flex flex-col items-center justify-center gap-3 p-8 bg-white border-2 border-slate-100 rounded-3xl hover:border-slate-200 hover:bg-slate-50 transition-all group"
         >
-          <RotateCcw className="w-5 h-5 transition-transform group-hover:-rotate-45" />
-          Retry This Role
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 transition-transform group-hover:scale-110">
+            <RotateCcw className="w-6 h-6" />
+          </div>
+          <div className="text-left w-full text-center">
+            <span className="block font-bold text-slate-900">Practice Round {currentRound} Again</span>
+            <span className="block text-xs text-slate-400 mt-1">Regenerate questions and try again</span>
+          </div>
         </button>
-        <button
-          onClick={onNewRole}
-          className="flex items-center gap-2 px-10 py-5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all group w-full sm:w-auto justify-center"
-        >
-          <PlusCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
-          Prepare New Role
-        </button>
+
+        {!isFinalRound ? (
+          <button
+            onClick={onContinue}
+            className={`flex flex-col items-center justify-center gap-3 p-8 border-2 border-transparent rounded-3xl shadow-xl transition-all group text-white ${currentRound === 1 ? 'bg-blue-600 shadow-blue-200 hover:bg-blue-700' : 'bg-rose-600 shadow-rose-200 hover:bg-rose-700'}`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-110">
+              {currentRound === 1 ? <ArrowRight className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+            </div>
+            <div className="text-left w-full text-center">
+              <span className="block font-bold">Continue to Round {currentRound + 1}</span>
+              <span className="block text-xs text-white/70 mt-1">
+                {currentRound === 1 ? "Targeted follow-ups based on your answers" : "Test your reflexes with an unexpected curveball"}
+              </span>
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={onNewRole}
+            className="flex flex-col items-center justify-center gap-3 p-8 bg-slate-900 border-2 border-transparent rounded-3xl shadow-xl hover:bg-slate-800 transition-all group text-white"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
+              <PlusCircle className="w-6 h-6" />
+            </div>
+            <div className="text-left w-full text-center">
+              <span className="block font-bold">Prepare New Role</span>
+              <span className="block text-xs text-white/50 mt-1">Start fresh with a different job title</span>
+            </div>
+          </button>
+        )}
       </div>
     </motion.div>
   );
